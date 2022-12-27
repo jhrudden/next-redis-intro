@@ -1,8 +1,5 @@
 import Head from "next/head";
-import { Inter } from "@next/font/google";
 import styles from "../styles/Home.module.css";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
     return (
@@ -21,6 +18,10 @@ export default function Home() {
             </Head>
             <main className={styles.main}>
                 <div className="flex">Hello</div>
+                {
+                    // TODO: Need form for adding todos
+                    // TODO: need list of current todos
+                }
             </main>
         </>
     );
