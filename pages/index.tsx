@@ -1,4 +1,6 @@
 import Head from "next/head";
+import AddTodo from "../components/addTodo";
+import TodoList from "../components/todoList";
 import styles from "../styles/Home.module.css";
 
 export default function Home() {
@@ -17,11 +19,13 @@ export default function Home() {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <main className={styles.main}>
-                <div className="flex">Hello</div>
-                {
-                    // TODO: Need form for adding todos
-                    // TODO: need list of current todos
-                }
+                <h1 className="fs-1 fw-bold" style={{ margin: "2rem" }}>
+                    Super Simple Todo
+                </h1>
+                <div className="d-flex flex-column" style={{ width: "400px" }}>
+                    <AddTodo />
+                    <TodoList />
+                </div>
             </main>
         </>
     );
