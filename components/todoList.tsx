@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Todo } from "../types/todo";
 
 interface UpdateTodoInputs {
-    todoId: number;
+    todoId: string;
     newTodo: Partial<Todo>;
 }
 
@@ -54,7 +54,7 @@ export default function TodoList() {
     });
 
     const onTodoCheck = useCallback(
-        async (e: ChangeEvent<HTMLInputElement>, todoId: number) => {
+        async (e: ChangeEvent<HTMLInputElement>, todoId: string) => {
             await mutateAsync({
                 todoId,
                 newTodo: { isComplete: e.target.checked },
