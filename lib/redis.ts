@@ -3,6 +3,7 @@ import { Todo, TodoForCreation } from "../types/todo";
 
 const client = new Client();
 
+// create a connection to redis db
 async function connect() {
     if (!client.isOpen()) {
         await client.open(process.env.REDIS_URL);
@@ -20,28 +21,28 @@ let schema = new Schema(
     { dataStructure: "JSON" }
 );
 
+async function todoInit() {
+    await connect();
+    return client.fetchRepository(schema);
+}
+
 // creates a todo entity in redis db with input data
 export async function createTodo(data: TodoForCreation) {
-    await connect();
-    const repository = client.fetchRepository(schema);
-    const todo = repository.createEntity(data);
-    const id = await repository.save(todo);
+    const todoRepository = await todoInit();
+    const todo = todoRepository.createEntity(data);
+    const id = await todoRepository.save(todo);
     return id;
 }
 
 export async function createIndex() {
-    await connect();
-
-    const repository = client.fetchRepository(schema);
-    await repository.createIndex();
+    const todoRepository = await todoInit();
+    await todoRepository.dropIndex();
+    await todoRepository.createIndex();
 }
 
 export async function getAllTodos(): Promise<Todo[]> {
-    await connect();
-
-    const repository = client.fetchRepository(schema);
-
-    const todoItems = await repository.search().return.all();
+    const todoRepository = await todoInit();
+    const todoItems = await todoRepository.search().return.all();
     return todoItems.map((item) => {
         let recs = item.toJSON();
         item.entityId;
@@ -51,4 +52,24 @@ export async function getAllTodos(): Promise<Todo[]> {
             description: recs["description"],
         };
     });
+}
+
+// updates a todo entity with given id in redis db with input data
+export async function updateTodo(id: string, data: Partial<Todo>) {
+    await todoInit();
+    const formattedId = `TodoItem:${id}`;
+    if (data.description)
+        await client.execute([
+            "JSON.SET",
+            formattedId,
+            ".description",
+            data.description,
+        ]);
+    if (data.isComplete !== undefined)
+        await client.execute([
+            "JSON.SET",
+            formattedId,
+            ".isComplete",
+            data.isComplete.toString(),
+        ]);
 }
