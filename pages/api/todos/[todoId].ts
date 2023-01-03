@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { updateTodo } from "../../../lib/redis";
+import { deleteTodo, updateTodo } from "../../../lib/redis";
 import { Todo } from "../../../types/todo";
 
 export default async function handler(
@@ -26,6 +26,7 @@ export default async function handler(
         case "DELETE":
             // Update or create data in your database
             console.log(`+ DELETING TODO WITH ID ${todoId}`);
+            await deleteTodo(todoId as string);
             return res.status(200).send(true);
         default:
             res.setHeader("Allow", ["PUT", "DELETE"]);

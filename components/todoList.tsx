@@ -1,3 +1,5 @@
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ChangeEvent, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Todo } from "../types/todo";
@@ -21,6 +23,12 @@ async function updateTodo(args: UpdateTodoInputs) {
     });
 }
 
+async function deleteTodo(id: string) {
+    return await fetch(`/api/todos/${id}`, {
+        method: "DELETE",
+    });
+}
+
 export default function TodoList() {
     const queryClient = useQueryClient();
     const {
@@ -33,7 +41,7 @@ export default function TodoList() {
         queryFn: getTodos,
     });
 
-    const { mutateAsync } = useMutation<
+    const { mutateAsync: updateTodoMutation } = useMutation<
         unknown,
         Error,
         UpdateTodoInputs,
@@ -53,41 +61,74 @@ export default function TodoList() {
         },
     });
 
+    const { mutateAsync: deleteTodoMutation } = useMutation<
+        unknown,
+        Error,
+        string,
+        unknown
+    >({
+        mutationFn: (args) => deleteTodo(args),
+        onSuccess: () => {
+            queryClient.invalidateQueries(["todos"]);
+        },
+    });
+
     const onTodoCheck = useCallback(
         async (e: ChangeEvent<HTMLInputElement>, todoId: string) => {
-            await mutateAsync({
+            await updateTodoMutation({
                 todoId,
                 newTodo: { isComplete: e.target.checked },
             });
         },
-        [mutateAsync]
+        [updateTodoMutation]
+    );
+
+    const onTodoDelete = useCallback(
+        async (todoId: string) => {
+            await deleteTodoMutation(todoId);
+        },
+        [deleteTodoMutation]
     );
 
     if (error) return <div>There was an issue</div>;
     return isLoading ? (
         <div>loading ...</div>
     ) : (
-        <ul className="list-group w-100">
+        <ul className="list-group w-100 position-relative">
             {todos
                 ?.sort((a, b) => a.description.localeCompare(b.description))
                 .sort((a, b) => Number(a.isComplete) - Number(b.isComplete))
                 .map((todo) => (
-                    <li className="list-group-item flex" key={todo.id}>
-                        <input
-                            disabled={isFetching}
-                            className="form-check-input me-2"
-                            type="checkbox"
-                            checked={todo.isComplete}
-                            onChange={(e) => onTodoCheck(e, todo.id)}
-                        />
-                        <label
-                            className={`form-check-label ${
-                                todo.isComplete &&
-                                "text-decoration-line-through"
-                            }`}
-                        >
-                            {todo.description}
-                        </label>
+                    <li className="list-group-item" key={todo.id}>
+                        <div className="row w-100 d-flex align-items-center">
+                            <div className="col-sm-1">
+                                <input
+                                    disabled={isFetching}
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    checked={todo.isComplete}
+                                    onChange={(e) => onTodoCheck(e, todo.id)}
+                                />
+                            </div>
+                            <div className="col-sm-10">
+                                <label
+                                    className={`form-check-label ${
+                                        todo.isComplete &&
+                                        "text-decoration-line-through"
+                                    }`}
+                                >
+                                    {todo.description}
+                                </label>
+                            </div>
+                            <div className="col-sm-1">
+                                <button
+                                    className="btn"
+                                    onClick={() => onTodoDelete(todo.id)}
+                                >
+                                    <FontAwesomeIcon icon={faXmark} />
+                                </button>
+                            </div>
+                        </div>
                     </li>
                 ))}
         </ul>

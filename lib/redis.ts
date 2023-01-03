@@ -73,3 +73,9 @@ export async function updateTodo(id: string, data: Partial<Todo>) {
             data.isComplete.toString(),
         ]);
 }
+
+// delete an existing todo with given id
+export async function deleteTodo(id: string) {
+    const repo = await todoInit();
+    await repo.remove(id);
+}
